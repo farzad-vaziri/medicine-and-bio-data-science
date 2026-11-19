@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medicine and bio data science: live dashboards by Farzad Vaziri</title>
+<meta name="description" content="Six live dashboards in medical and biological data science: cancer genomics, single-cell biology, clinical trials, drug safety, patient pathways and readmission risk, built on open data.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Medicine and bio data science: live dashboards">
+<meta property="og:description" content="Six live dashboards from the lab bench to the hospital ward, built on open data.">
+<meta property="og:image" content="https://farzad-vaziri.github.io/medicine-and-bio-data-science/assets/previews/cancer-main.jpg">
+<link rel="preload" href="assets/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/ibm-plex-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'IBM Plex Sans';font-weight:400;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:500;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:600;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:700;font-display:swap;src:url(assets/fonts/ibm-plex-sans-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:400;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-weight:500;font-display:swap;src:url(assets/fonts/ibm-plex-mono-latin-500-normal.woff2) format('woff2')}
+
+:root{--bg:#eef4f4;--panel:#fff;--ink:#0f2a30;--muted:#55707a;--teal:#00796b;--teal-2:#d5ebe8;--line:#c9dbdc;--grid:rgba(0,121,107,.07);--btn-ink:#fff;--live:#1a9c5b;--img:none}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0b1719;--panel:#11232a;--ink:#e2eef0;--muted:#93acb3;--teal:#3cc4b1;--teal-2:#163a3c;--line:#24424a;--grid:rgba(60,196,177,.06);--btn-ink:#06201d;--live:#4fd38e;--img:brightness(.9)}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:1rem;line-height:1.6}
+a{color:inherit}
+img{filter:var(--img)}
+.mono,.slip,.ref,.lbl,dl,.k,.top,.idx b,.sum dt{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--panel);padding:8px;z-index:9}
+:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.live{color:var(--live)}
+
+/* header bar */
+.top{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:14px 0;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.top .c{color:var(--ink);font-weight:500;white-space:nowrap}
+.ecg{display:block;width:100%;height:44px}
+.ecg path{fill:none;stroke:var(--teal);stroke-width:2;vector-effect:non-scaling-stroke}
+
+/* hero */
+.hero{display:grid;grid-template-columns:7fr 5fr;gap:32px;padding:34px 0 44px}
+.lbl{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:500}
+.hero h1{font-weight:600;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1;letter-spacing:-.025em;margin:12px 0 0}
+.hero h1 em{font-style:normal;color:var(--teal)}
+.hero .intro{font-size:1.25rem;line-height:1.45;margin:22px 0 0;max-width:36em}
+.hero .note{color:var(--muted);font-size:.9375rem;margin:12px 0 0}
+.sum{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--teal);border-radius:6px;padding:18px 20px;align-self:end}
+.sum h2{font-size:.75rem;font-family:'IBM Plex Mono',monospace;font-weight:500;letter-spacing:.1em;text-transform:uppercase;margin:0 0 10px;color:var(--muted)}
+.sum dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 14px;font-size:.8125rem}
+.sum dt{color:var(--muted)}.sum dd{margin:0;font-family:'IBM Plex Sans',sans-serif}
+.idx a{display:grid;grid-template-columns:44px 1fr;padding:8px 0;border-top:1px dashed var(--line);text-decoration:none;font-weight:500;font-size:.9375rem}
+.idx a:hover span{color:var(--teal);text-decoration:underline}
+.idx b{color:var(--teal);font-weight:500}
+
+/* featured */
+.feat{background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--teal);border-radius:6px;padding:28px;display:grid;grid-template-columns:7fr 5fr;gap:30px;margin-bottom:20px}
+.feat .m img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:4px}
+.feat h2{font-size:2rem;line-height:1.1;letter-spacing:-.015em;font-weight:600;margin:10px 0 14px}
+.feat h2 a{text-decoration:none}.feat h2 a:hover{color:var(--teal)}
+.feat p{margin:0 0 12px}
+.btn{display:inline-block;background:var(--teal);color:var(--btn-ink);padding:11px 18px;border-radius:4px;font-weight:600;text-decoration:none;margin-top:6px}
+.btn:hover{filter:brightness(1.1)}
+.more{display:inline-block;margin:6px 0 0 14px;font-weight:500;font-size:.9375rem}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.thumbs a{display:block}
+.thumbs img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:4px}
+.thumbs a:hover img,.card .pic:hover img{outline:2px solid var(--teal)}
+.feat dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.8125rem;margin:16px 0 0;color:var(--muted)}
+.feat dd{margin:0;color:var(--ink)}
+
+/* sections */
+section.s{padding:44px 0 6px}
+.sh{display:grid;grid-template-columns:150px 1fr 1fr;gap:24px;align-items:end;padding-bottom:14px;margin-bottom:24px;border-bottom:1px solid var(--line);position:relative}
+.sh::after{content:"";position:absolute;left:0;right:0;bottom:-7px;height:6px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 24px)}
+.sh .num{font-family:'IBM Plex Mono',monospace;font-size:.8125rem;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
+.sh .num b{display:block;font-size:2.75rem;line-height:1;font-weight:500;letter-spacing:0;color:var(--ink)}
+.sh h2{font-size:1.875rem;line-height:1.1;font-weight:600;letter-spacing:-.01em;margin:0}
+.sh p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.slip{display:flex;justify-content:space-between;padding:9px 16px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;background:var(--teal-2);border-bottom:1px solid var(--line)}
+.card .pic{display:block;padding:14px 16px 0}
+.card .pic img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:4px}
+.card .txt{padding:14px 16px 18px;display:flex;flex-direction:column;flex:1}
+.card h3{font-size:1.375rem;line-height:1.2;font-weight:600;margin:0 0 8px}
+.card h3 a{text-decoration:none}.card h3 a:hover{color:var(--teal);text-decoration:underline}
+.card p{margin:0 0 12px}
+.card dl{display:grid;grid-template-columns:72px 1fr;margin:0 0 14px;font-size:.78rem;border-top:1px solid var(--line)}
+.card dt,.card dd{margin:0;padding:6px 0;border-bottom:1px solid var(--line)}
+.card dt{color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.links{display:flex;gap:18px;flex-wrap:wrap;font-weight:600;font-size:.9375rem;margin-top:auto}
+.links a:first-child{color:var(--teal)}
+.card.wide{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
+.card.wide .slip{flex-basis:100%}
+.card.wide .pic{flex:0 0 58%;padding:16px}
+.card.wide .txt{flex:1;padding:18px 20px}
+
+/* write-ups */
+.wu{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:22px;display:grid;grid-template-columns:300px 1fr}
+.wh{padding:22px;border-right:1px solid var(--line);background:linear-gradient(var(--teal-2),transparent 70%)}
+.ref{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.wh h3{font-size:1.5rem;line-height:1.15;font-weight:600;margin:10px 0 8px}
+.wh .meta{font-size:.875rem;color:var(--muted);margin:0 0 14px}
+.rows{padding:8px 24px 22px}
+.r{display:grid;grid-template-columns:150px 1fr;gap:18px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.k{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);padding-top:3px}
+.v p{margin:0}.v ul{margin:0;padding-left:1.1em}.v li{margin:0 0 4px}
+.wu figure{margin:18px 0 0}
+.wu figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:4px}
+.wu figcaption{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--muted);margin-top:8px}
+.top-link{display:inline-block;margin-top:14px;font-size:.875rem;font-weight:500}
+
+footer{margin-top:30px;border-top:1px solid var(--line);padding:20px 0 48px;display:grid;grid-template-columns:1fr 2fr;gap:24px;font-size:.8125rem;color:var(--muted)}
+footer .a{font-family:'IBM Plex Mono',monospace;color:var(--ink);text-transform:uppercase;letter-spacing:.06em;font-size:.75rem}
+footer p{margin:0 0 8px}
+
+@media (max-width:900px){
+  .hero,.feat{grid-template-columns:1fr}
+  .sh{grid-template-columns:1fr;gap:6px}
+  .wu{grid-template-columns:1fr}.wh{border-right:0;border-bottom:1px solid var(--line)}
+  .card.wide .pic,.card.wide .txt{flex-basis:100%}
+}
+@media (max-width:700px){
+  .wrap{padding:0 16px}
+  .top .b{display:none}
+  .hero{padding:24px 0 32px}
+  .hero .intro{font-size:1.125rem}
+  .feat{padding:18px}
+  .feat h2{font-size:1.625rem}
+  .grid{grid-template-columns:1fr}
+  .more{display:block;margin:12px 0 0}
+  .r{grid-template-columns:1fr;gap:4px}
+  .rows{padding:6px 16px 18px}
+  footer{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+
+<header class="top">
+  <div class="a">Collection · Medicine and bio data science</div>
+  <div class="b">Live dashboards from the lab bench to the hospital ward</div>
+  <div class="c">Farzad Vaziri</div>
+</header>
+<svg class="ecg" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 34 H300 l12 -4 l10 4 H360 l8 10 l12 -42 l12 50 l10 -18 H420 l14 -6 l14 6 H760 l12 -4 l10 4 H820 l8 10 l12 -42 l12 50 l10 -18 H880 l14 -6 l14 6 H1200"/></svg>
+
+<main id="main">
+<div class="hero" id="top">
+  <div>
+    <div class="lbl">Collection record · 6 dashboards · all live</div>
+    <h1>Medicine &amp; bio <em>data science</em></h1>
+    <p class="intro">From genes and cells to clinical trials, drug safety and hospital care. Each of these six dashboards takes one open biomedical dataset, asks one question of it and lets you explore the answer.</p>
+    <p class="note">Every image, title and button opens the dashboard. Apps can take up to 30 seconds to wake.</p>
+  </div>
+  <aside class="sum" aria-labelledby="sum-h">
+    <h2 id="sum-h">Summary</h2>
+    <dl>
+      <dt>Data</dt><dd>TCGA, GTEx, 10x Genomics, ClinicalTrials.gov, openFDA, Synthea, UCI</dd>
+      <dt>Methods</dt><dd>Survival analysis, single-cell clustering, pharmacovigilance, calibrated risk models</dd>
+      <dt>Built with</dt><dd>Python, Streamlit, Plotly, Scanpy, DuckDB, LightGBM</dd>
+    </dl>
+    <nav class="idx" aria-label="Contents">
+      <a href="#featured"><b>★</b><span>Featured: Cancer Survival Explorer</span></a>
+      <a href="#genes"><b>01</b><span>Genes and cells</span></a>
+      <a href="#medicines"><b>02</b><span>Medicines and trials</span></a>
+      <a href="#patients"><b>03</b><span>Patients and hospitals</span></a>
+      <a href="#write-ups"><b>04</b><span>Methods and write-ups</span></a>
+    </nav>
+  </aside>
+</div>
+
+<section class="feat" id="featured" aria-labelledby="f-title">
+  <div class="m"><a href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/cancer-main.jpg" width="1400" height="801" alt="Kaplan–Meier survival curves for high and low BIRC5 expression in kidney cancer, beside an adjusted Cox model forest plot"></a><div class="thumbs"><a href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/cancer-violins.jpg" width="800" height="600" loading="lazy" alt="Violins of BIRC5 expression in normal kidney and kidney tumours"></a><a href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/cancer-pancancer.jpg" width="800" height="600" loading="lazy" alt="Hazard ratio for BIRC5 across 15 cancers"></a><a href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/cancer-screen.jpg" width="800" height="600" loading="lazy" alt="Volcano plot screening all 316 genes in kidney clear cell carcinoma"></a></div></div>
+  <div class="t">
+    <div class="lbl">Featured · DS-01 · <span class="live">● Live</span></div>
+    <h2 id="f-title"><a href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener">Cancer Survival Explorer</a></h2>
+    <p>Pick a cancer and a gene: does high expression go with shorter or longer survival, is the gene switched on in tumours compared with normal tissue, and does the link hold after adjusting for age, sex and stage?</p>
+    <p>Survival curves, an adjusted Cox model, tumour against normal tissue, the gene across 15 cancers and a screen of 316 genes with honest false-discovery control, built on TCGA and GTEx data.</p>
+    <a class="btn" href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    <a class="more" href="#w-cancer">Read the write-up ↓</a>
+    <dl><dt>Data</dt><dd>TCGA · GTEx (UCSC Xena)</dd><dt>Method</dt><dd>Kaplan–Meier · Cox model · FDR</dd></dl>
+  </div>
+</section>
+
+<section class="s" id="genes" aria-labelledby="s1">
+  <div class="sh"><div class="num">Section<b>01</b></div><h2 id="s1">Genes and cells</h2><p>What single-cell sequencing shows about the immune cells in one blood sample, and how analysis choices shape the result.</p></div>
+  <div class="grid">
+    <article class="card wide">
+      <div class="slip"><span>DS-02</span><span class="live">● Live</span></div>
+      <a class="pic" href="https://single-cell-atlas.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/singlecell-card.jpg" width="1000" height="625" loading="lazy" alt="UMAP map of 2,638 immune cells coloured by cell type, with cell counts per type"></a>
+      <div class="txt">
+        <h3><a href="https://single-cell-atlas.streamlit.app" target="_blank" rel="noopener">Single-Cell Atlas</a></h3>
+        <p>How do 2,700 blood immune cells group into cell types? Explore an interactive map of single cells, the marker genes that define each type, and how analysis choices change the picture.</p>
+        <dl><dt>Data</dt><dd>10x Genomics PBMC 3k</dd><dt>Method</dt><dd>Scanpy · Leiden · UMAP</dd></dl>
+        <div class="links"><a href="https://single-cell-atlas.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a><a href="#w-singlecell">Write-up ↓</a></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="s" id="medicines" aria-labelledby="s2">
+  <div class="sh"><div class="num">Section<b>02</b></div><h2 id="s2">Medicines and trials</h2><p>Where clinical research effort goes and which trials stop early, and how safety signals emerge once a medicine is in use.</p></div>
+  <div class="grid">
+    <article class="card">
+      <div class="slip"><span>DS-03</span><span class="live">● Live</span></div>
+      <a class="pic" href="https://clinical-trials-landscape.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/trials-card.jpg" width="1000" height="625" loading="lazy" alt="Kaplan–Meier curves of time to primary completion by trial phase, and a Cox model forest plot"></a>
+      <div class="txt">
+        <h3><a href="https://clinical-trials-landscape.streamlit.app" target="_blank" rel="noopener">Clinical Trials Landscape</a></h3>
+        <p>Where does clinical research effort go, how long do trials take, and which ones stop early? Explore 426,616 trials registered since 2008 by disease, phase and sponsor, and see whether early stopping can be predicted at registration.</p>
+        <dl><dt>Data</dt><dd>ClinicalTrials.gov</dd><dt>Method</dt><dd>Survival analysis · LightGBM · SHAP</dd></dl>
+        <div class="links"><a href="https://clinical-trials-landscape.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a><a href="#w-trials">Write-up ↓</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <div class="slip"><span>DS-04</span><span class="live">● Live</span></div>
+      <a class="pic" href="https://drug-safety-signals.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/drug-card.jpg" width="1000" height="625" loading="lazy" alt="Dot-and-whisker chart of reactions reported unusually often with atorvastatin, ranked by shrunk ratio"></a>
+      <div class="txt">
+        <h3><a href="https://drug-safety-signals.streamlit.app" target="_blank" rel="noopener">Drug Safety Signals</a></h3>
+        <p>Which side effects are reported to the US FDA more often than chance would suggest? Rank drug–reaction signals with three standard measures, watch a signal build up year by year, and see why a signal is a question, not an answer.</p>
+        <dl><dt>Data</dt><dd>openFDA · FAERS</dd><dt>Method</dt><dd>PRR · ROR · Bayesian shrinkage</dd></dl>
+        <div class="links"><a href="https://drug-safety-signals.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a><a href="#w-drug">Write-up ↓</a></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="s" id="patients" aria-labelledby="s3">
+  <div class="sh"><div class="num">Section<b>03</b></div><h2 id="s3">Patients and hospitals</h2><p>The journeys patients take through care, what they cost, and who comes back to hospital within 30 days.</p></div>
+  <div class="grid">
+    <article class="card">
+      <div class="slip"><span>DS-05</span><span class="live">● Live</span></div>
+      <a class="pic" href="https://patient-pathways.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/pathways-card.jpg" width="1000" height="625" loading="lazy" alt="Sankey diagram of the first four care settings patients visit after a new diagnosis"></a>
+      <div class="txt">
+        <h3><a href="https://patient-pathways.streamlit.app" target="_blank" rel="noopener">Patient Pathways</a></h3>
+        <p>What journeys do patients with a chronic condition take through care, what does each condition cost, and who comes back to hospital within 30 days? Explored in a synthetic health system's linked records.</p>
+        <dl><dt>Data</dt><dd>Synthea (synthetic patients)</dd><dt>Method</dt><dd>DuckDB SQL · Sankey · gradient boosting</dd></dl>
+        <div class="links"><a href="https://patient-pathways.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a><a href="#w-pathways">Write-up ↓</a></div>
+      </div>
+    </article>
+    <article class="card">
+      <div class="slip"><span>DS-06</span><span class="live">● Live</span></div>
+      <a class="pic" href="https://readmission-risk-explorer.streamlit.app" target="_blank" rel="noopener"><img src="assets/previews/readmission-card.jpg" width="1000" height="625" loading="lazy" alt="Bar charts of 30-day readmission rates by prior stays, discharge destination, diagnosis and HbA1c test"></a>
+      <div class="txt">
+        <h3><a href="https://readmission-risk-explorer.streamlit.app" target="_blank" rel="noopener">Readmission Risk</a></h3>
+        <p>Which hospital patients with diabetes come back within 30 days? Compare two risk models, set the follow-up threshold from your own costs, and check whether the decision is fair across patient groups.</p>
+        <dl><dt>Data</dt><dd>UCI Diabetes 130-US Hospitals</dd><dt>Method</dt><dd>LightGBM · calibration · decision curves</dd></dl>
+        <div class="links"><a href="https://readmission-risk-explorer.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a><a href="#w-readmission">Write-up ↓</a></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="s" id="write-ups" aria-labelledby="s4">
+  <div class="sh"><div class="num">Section<b>04</b></div><h2 id="s4">Methods and write-ups</h2><p>For each dashboard: the question, the data, the method, the main results and what to be careful about. Figures are as published in each app.</p></div>
+  <article class="wu" id="w-cancer">
+    <header class="wh">
+      <div class="ref">Report DS-01 <span class="live">● Live</span></div>
+      <h3>Cancer Survival Explorer</h3>
+      <p class="meta">15 cancers · 7,154 patients · 316 genes · tumour vs normal tissue</p>
+      <a class="btn" href="https://cancer-survival-explorer.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    </header>
+    <div class="rows">
+      <div class="r"><div class="k">Question</div><div class="v"><p>For a chosen cancer and gene, is high expression of the gene linked to shorter or longer survival, is the gene switched on in tumours compared with normal tissue, and does the link survive adjustment for age, sex and stage?</p></div></div>
+      <div class="r"><div class="k">Data</div><div class="v"><p>The Cancer Genome Atlas (TCGA) PanCancer Atlas expression and the TCGA Clinical Data Resource survival endpoints, plus the UCSC Toil recompute of TCGA and GTEx normal tissue, all open-access through the UCSC Xena hubs. 15 cancer types, 7,154 patients, 316 curated genes (oncogenes, tumour suppressors, proliferation, immune and checkpoint genes, drug targets).</p></div></div>
+      <div class="r"><div class="k">Method</div><div class="v"><ul><li>Kaplan–Meier curves by expression group (median split, tertiles, or an optimised cut-point that always carries a warning), with log-rank tests; follow-up capped at 10 years.</li><li>Cox proportional hazards per standard deviation of expression, adjusted for age, sex and stage where usable, with a Schoenfeld test of the proportional-hazards assumption.</li><li>Tumour against normal tissue (Hedges' g, Mann–Whitney), a pan-cancer view of the gene, and a screen of every gene with Benjamini–Hochberg false-discovery control. Survival code written in NumPy/SciPy and checked against lifelines.</li></ul></div></div>
+      <div class="r"><div class="k">Main results</div><div class="v"><p>The default view reproduces a known result: high BIRC5 (survivin) in kidney clear cell carcinoma goes with worse overall survival. Five-year survival is 50% in the high group against 79% in the low group (log-rank p = 1.1×10⁻⁹); each standard deviation of expression carries 69% higher hazard (HR 1.69, 95% CI 1.48–1.93), and 53% after adjustment (1.53, 1.32–1.77). In that cancer's screen, chance alone would give about 16 genes with p &lt; 0.05; 192 do, and 176 survive a 5% false-discovery rate.</p></div></div>
+      <div class="r"><div class="k">What you can explore</div><div class="v"><p>Any of 15 cancers and 316 genes; three endpoints (overall, disease-specific and progression-free survival); three ways to split patients; survival curves with numbers at risk; the adjusted forest plot; tumour against normal violins; the gene across all 15 cancers; and a volcano plot of the full screen.</p></div></div>
+      <div class="r"><div class="k">Caveats</div><div class="v"><ul><li>Research data exploration, not clinical advice. Associations are not causes: many top genes simply track tumour growth rate or grade.</li><li>TCGA cohorts are not population-representative, and adjustment is limited to age, sex and stage.</li><li>Optimised cut-points overstate differences; the app warns every time one is used.</li></ul></div></div>
+      <figure><img src="assets/previews/cancer-fig.jpg" width="1200" height="488" loading="lazy" alt="Dashboard header with selectors and six headline figures for BIRC5 in kidney clear cell carcinoma"><figcaption>Fig. DS-01 · The default view: BIRC5 in kidney clear cell carcinoma, overall survival.</figcaption></figure>
+      <a class="top-link" href="#top">Back to top ↑</a>
+    </div>
+  </article>
+  <article class="wu" id="w-singlecell">
+    <header class="wh">
+      <div class="ref">Report DS-02 <span class="live">● Live</span></div>
+      <h3>Single-Cell Atlas</h3>
+      <p class="meta">One healthy donor · 2,700 blood immune cells · 32,738 genes measured</p>
+      <a class="btn" href="https://single-cell-atlas.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    </header>
+    <div class="rows">
+      <div class="r"><div class="k">Question</div><div class="v"><p>How do the immune cells in one blood sample group into cell types, which genes mark each type, and how much do analysis choices change the answer?</p></div></div>
+      <div class="r"><div class="k">Data</div><div class="v"><p>10x Genomics, "3k PBMCs from a Healthy Donor": 2,700 peripheral blood mononuclear cells measured on 32,738 genes. CC BY 4.0.</p></div></div>
+      <div class="r"><div class="k">Method</div><div class="v"><ul><li>The standard single-cell pipeline, run offline in Scanpy: quality control at three strictness presets, normalisation, highly variable genes, PCA (40 components), a nearest-neighbour graph, Leiden clustering at three resolutions, UMAP and t-SNE.</li><li>Marker genes by Wilcoxon rank-sum test with Benjamini–Hochberg correction; clusters named by a written rule on canonical markers.</li><li>Stability checked with the adjusted Rand index across resolutions, random seeds and QC presets. All steps seeded; the build is byte-for-byte reproducible.</li></ul></div></div>
+      <div class="r"><div class="k">Main results</div><div class="v"><p>Standard QC keeps 2,638 cells and 13,714 genes, with 1,838 highly variable genes, exactly matching the reference Scanpy tutorial. At resolution 1.2 Leiden finds 10 clusters, which the marker rule names as 8 cell types; CD4⁺ T cells are the largest group (44%). Fine clusters are a choice: at resolution 1.2 the T-cell subclusters reshuffle between seeds (ARI 0.66), but the cell types stay stable (ARI 0.89).</p></div></div>
+      <div class="r"><div class="k">What you can explore</div><div class="v"><p>UMAP or t-SNE embeddings; three clustering resolutions; colour by cell type, cluster, any of 1,931 genes or a QC metric; a marker dot plot and table per cluster; a gene view; and the pipeline step by step, with live QC thresholds.</p></div></div>
+      <div class="r"><div class="k">Caveats</div><div class="v"><ul><li>One donor and one dataset: a demonstration of method, not a reference atlas.</li><li>Distances on a UMAP are not literal; cluster sizes and gaps carry little meaning.</li><li>Not for clinical or research use.</li></ul></div></div>
+      <figure><img src="assets/previews/singlecell-fig.jpg" width="1200" height="717" loading="lazy" alt="Dot plot of canonical marker genes by cluster, dot size showing the share of cells expressing each gene"><figcaption>Fig. DS-02 · Marker genes: each cell type switches on its own short list of genes.</figcaption></figure>
+      <a class="top-link" href="#top">Back to top ↑</a>
+    </div>
+  </article>
+  <article class="wu" id="w-trials">
+    <header class="wh">
+      <div class="ref">Report DS-03 <span class="live">● Live</span></div>
+      <h3>Clinical Trials Landscape</h3>
+      <p class="meta">Every interventional study registered since 2008 · 426,616 records · snapshot 18 Nov 2026</p>
+      <a class="btn" href="https://clinical-trials-landscape.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    </header>
+    <div class="rows">
+      <div class="r"><div class="k">Question</div><div class="v"><p>Where does clinical research effort go, how long do trials take to finish, and which kinds of trial stop early, and why?</p></div></div>
+      <div class="r"><div class="k">Data</div><div class="v"><p>ClinicalTrials.gov API v2 (U.S. National Library of Medicine), every interventional study first posted since 2008: 426,616 records on 18 Nov 2026. Status counts match ClinicalTrials.gov's own exactly. Only structured fields are stored, plus the short free-text reason a trial stopped.</p></div></div>
+      <div class="r"><div class="k">Method</div><div class="v"><ul><li>Therapeutic areas from the MeSH disease tree (13 groups).</li><li>Time from start to primary completion: Kaplan–Meier curves and a Cox model (phase, sponsor, area, enrolment, multi-country, masking), with ongoing and stopped trials censored correctly.</li><li>Stop reasons: ordered keyword rules, refined on one hand-labelled sample and checked on a separate one (83% agreement).</li><li>Early-termination classifier using only what is known at registration (logistic baseline against LightGBM), trained on 2008–2015 starts and tested on 2017–2019, with calibration and SHAP. Enrolment and site counts are left out because they would leak the outcome.</li></ul></div></div>
+      <div class="r"><div class="k">Main results</div><div class="v"><p>Among trials started since 2008, 23.2% are industry-sponsored, the median time from start to primary completion is 2.3 years, 9.2% were terminated or withdrawn, and 15.8% have posted results. Most trials that stop early do so for recruitment, not safety: low accrual accounts for 33% of stated reasons and business or funding decisions for 23%, against 4% for safety. Early stopping is only modestly predictable at registration (AUC 0.68 for LightGBM, 0.66 for the logistic baseline).</p></div></div>
+      <div class="r"><div class="k">What you can explore</div><div class="v"><p>Filters for area, phase, sponsor, start year and country; a treemap of research effort; trials started per year; completion curves by phase or sponsor; the Cox model; termination rates and reasons over time; the classifier's calibration and drivers; and the UK, EU and US compared.</p></div></div>
+      <div class="r"><div class="k">Caveats</div><div class="v"><ul><li>Registrations are self-reported and uneven in quality; many dates are anticipated and later revised.</li><li>Region comparisons mix region with trial type. Not medical advice.</li></ul></div></div>
+      <figure><img src="assets/previews/trials-fig.jpg" width="1200" height="936" loading="lazy" alt="Treemap of studies by therapeutic area and phase, and small multiples of trials started each year by area"><figcaption>Fig. DS-03 · Where research effort goes: studies by therapeutic area and phase, and trials started each year.</figcaption></figure>
+      <a class="top-link" href="#top">Back to top ↑</a>
+    </div>
+  </article>
+  <article class="wu" id="w-drug">
+    <header class="wh">
+      <div class="ref">Report DS-04 <span class="live">● Live</span></div>
+      <h3>Drug Safety Signals</h3>
+      <p class="meta">US FDA adverse event reports · 2010 – September 2026 · 60 drugs · 199 reaction terms</p>
+      <a class="btn" href="https://drug-safety-signals.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    </header>
+    <div class="rows">
+      <div class="r"><div class="k">Question</div><div class="v"><p>Which drug–reaction pairs are reported to the US FDA more often than chance would suggest, how do such signals emerge over time, and why must they be read with care?</p></div></div>
+      <div class="r"><div class="k">Data</div><div class="v"><p>openFDA drug adverse event API (FDA Adverse Event Reporting System), public domain (CC0). Only aggregated count queries, for reports received from 2010 to September 2026: 19.4 million reports naming a suspect drug, 60 drugs, and the 200 most-reported reaction terms plus about 40 well-known labelled reactions.</p></div></div>
+      <div class="r"><div class="k">Method</div><div class="v"><ul><li>A 2×2 table for every drug–reaction pair and year; the proportional reporting ratio (PRR) and reporting odds ratio (ROR) with 95% intervals, and the Evans screening rule.</li><li>An empirical-Bayes shrunk ratio (DuMouchel's gamma-Poisson shrinker, EBGM) so that tiny counts cannot produce huge ratios, with 90% credible intervals.</li><li>Cumulative signals year by year, and a Benjamini–Hochberg multiple-testing check.</li></ul></div></div>
+      <div class="r"><div class="k">Main results</div><div class="v"><p>2,423 of 11,940 drug–reaction pairs pass the screening rule. Known labelled reactions come through clearly: atorvastatin and muscle pain (myalgia) has a shrunk ratio of 4.9 from 7,749 reports and met the rule from 2010. 47% of reports come from consumers. With millions of reports almost any gap is "significant" (10,904 pairs survive a 5% false-discovery rate), which is why the screening rule, not the p-value, does the filtering.</p></div></div>
+      <div class="r"><div class="k">What you can explore</div><div class="v"><p>Drug, drug class, reaction group, years, reporter type and measure; a drug's profile of reactions; a heatmap of drugs against reaction groups; how a chosen signal emerged, with reports per year underneath; and four worked reasons for caution.</p></div></div>
+      <div class="r"><div class="k">Caveats</div><div class="v"><ul><li>A disproportionate number of reports is not proof that a drug causes a reaction: there is no count of users, reports can be duplicated, news and lawsuits stimulate reporting, and the disease being treated can look like a side effect.</li><li>Portfolio demo, not medical advice. Do not change any medicine because of it.</li></ul></div></div>
+      <figure><img src="assets/previews/drug-fig.jpg" width="1200" height="822" loading="lazy" alt="Cumulative shrunk ratio for atorvastatin and myalgia by year with its interval, above bars of reports per year"><figcaption>Fig. DS-04 · How a signal emerges: atorvastatin and myalgia, cumulative ratio and reports per year.</figcaption></figure>
+      <a class="top-link" href="#top">Back to top ↑</a>
+    </div>
+  </article>
+  <article class="wu" id="w-pathways">
+    <header class="wh">
+      <div class="ref">Report DS-05 <span class="live">● Live</span></div>
+      <h3>Patient Pathways</h3>
+      <p class="meta">Synthetic health system · 10,563 patients · 453,911 encounters · 2016–2025</p>
+      <a class="btn" href="https://patient-pathways.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    </header>
+    <div class="rows">
+      <div class="r"><div class="k">Question</div><div class="v"><p>What journeys do patients with a chronic condition take through care, what does each condition cost, and who comes back to hospital within 30 days?</p></div></div>
+      <div class="r"><div class="k">Data</div><div class="v"><p>Synthea™ synthetic patient generator (The MITRE Corporation; software Apache 2.0, generated data public domain): 10,000 living Massachusetts residents plus those who died during the simulation, with ten years of linked records. Every person, visit and cost is simulated; dollar values are Synthea's simulated US claim costs.</p></div></div>
+      <div class="r"><div class="k">Method</div><div class="v"><ul><li>DuckDB SQL turns raw visits into one row per patient, costs and pathways, with join checks so no row is added or lost. Visits in the same care setting are merged into one step (a gaps-and-islands query).</li><li>Six focus conditions: hypertension, ischaemic heart disease, type 2 diabetes, chronic kidney disease, heart failure and COPD.</li><li>A deliberately small 30-day readmission model using only what is known at discharge: logistic regression against gradient boosting, a patient-grouped train/test split, a cost-based threshold tool and a fairness table.</li></ul></div></div>
+      <div class="r"><div class="k">Main results</div><div class="v"><p>Care for 10,563 patients cost $1.67bn in claims, $17.0k per patient-year, and the costliest 5% of patients carry 37% of all cost. 18.3% of 3,364 hospital stays were followed by a readmission within 30 days. Gradient boosting ranks stays better than logistic regression (AUC 0.87 against 0.80), but Synthea's rule-based disease models make any model look better than it would on real records.</p></div></div>
+      <div class="r"><div class="k">What you can explore</div><div class="v"><p>Condition, age band, sex, payer and number of conditions; the Sankey of journeys after a new diagnosis, top journeys and transition probabilities; cost by condition, care setting and payer, with a Lorenz curve; the readmission model card, threshold tool and fairness check; and the SQL that builds a pathway.</p></div></div>
+      <div class="r"><div class="k">Caveats</div><div class="v"><ul><li>Synthetic patients: patterns reflect Synthea's disease models, not a real population or any real health system.</li><li>US claim costs, not NHS costs.</li></ul></div></div>
+      <figure><img src="assets/previews/pathways-fig.jpg" width="1200" height="1051" loading="lazy" alt="Readmission model card with ROC and calibration curves, and a net-saving curve by risk threshold"><figcaption>Fig. DS-05 · Who comes back within 30 days: the model card and the threshold tool.</figcaption></figure>
+      <a class="top-link" href="#top">Back to top ↑</a>
+    </div>
+  </article>
+  <article class="wu" id="w-readmission">
+    <header class="wh">
+      <div class="ref">Report DS-06 <span class="live">● Live</span></div>
+      <h3>Readmission Risk</h3>
+      <p class="meta">130 US hospitals · 1999–2008 · 99,340 encounters from 69,987 patients with diabetes</p>
+      <a class="btn" href="https://readmission-risk-explorer.streamlit.app" target="_blank" rel="noopener">Open the dashboard →</a>
+    </header>
+    <div class="rows">
+      <div class="r"><div class="k">Question</div><div class="v"><p>Which hospitalised patients with diabetes come back within 30 days, how well can a model flag them at discharge, where should a hospital set the threshold for follow-up given its costs, and is that decision fair?</p></div></div>
+      <div class="r"><div class="k">Data</div><div class="v"><p>Diabetes 130-US Hospitals for Years 1999–2008 (Clore, Cios, DeShazo and Strack, 2014), UCI Machine Learning Repository, CC BY 4.0. After removing discharges to death or hospice: 99,340 encounters from 69,987 patients.</p></div></div>
+      <div class="r"><div class="k">Method</div><div class="v"><ul><li>L2-penalised logistic regression against LightGBM, with five-fold cross-validation grouped by patient so no patient appears in both training and test data, and isotonic calibration.</li><li>TreeSHAP and odds ratios for interpretation.</li><li>A decision curve (net benefit) and a cost model: saving per 1,000 discharges from the follow-up cost, the readmission cost and the share of readmissions prevented, all editable.</li><li>Fairness by race, sex and age band (selection rate, true- and false-positive rates, calibration) with 95% intervals. Race is not a model input; a copy with race added is used only for comparison.</li></ul></div></div>
+      <div class="r"><div class="k">Main results</div><div class="v"><p>11.4% of encounters are followed by a readmission within 30 days. Past admissions are the loudest signal: 37% of patients with five or more inpatient stays in the previous year come back, against 9% of those with none. Both models are modest, as is typical for this dataset (AUC 0.671 for LightGBM, 0.658 for logistic regression), and adding race changes nothing. With the illustrative costs, a 15% threshold flags 20% of discharges, catches 39% of readmissions and saves about $42.6k per 1,000 discharges; the share of readmissions caught ranges from 26% to 41% across race groups.</p></div></div>
+      <div class="r"><div class="k">What you can explore</div><div class="v"><p>Age band, admission type and diagnosis group; readmission rates with intervals; ROC, precision–recall and calibration curves; SHAP drivers and odds ratios; a threshold slider with editable costs; and the fairness audit.</p></div></div>
+      <div class="r"><div class="k">Caveats</div><div class="v"><ul><li>US data from 1999–2008; coding and care have changed since. Research data, not clinical advice.</li><li>Costs are illustrative US-dollar defaults; readmissions to other hospitals may be missed.</li></ul></div></div>
+      <figure><img src="assets/previews/readmission-fig.jpg" width="1200" height="498" loading="lazy" alt="ROC, precision–recall and calibration curves for logistic regression and LightGBM"><figcaption>Fig. DS-06 · The models: discrimination and calibration, out-of-fold.</figcaption></figure>
+      <a class="top-link" href="#top">Back to top ↑</a>
+    </div>
+  </article>
+</section>
+</main>
+
+<footer>
+  <div class="a">Farzad Vaziri · Medicine and bio data science</div>
+  <div class="b">
+    <p>Data: TCGA Research Network and GTEx Project open-access data via UCSC Xena; 10x Genomics (CC BY 4.0); ClinicalTrials.gov, U.S. National Library of Medicine; openFDA / FDA FAERS (CC0); Synthea™ synthetic patients, The MITRE Corporation (public domain); UCI Machine Learning Repository (CC BY 4.0). Each dashboard carries its full credits.</p>
+    <p>The apps run on Streamlit's free tier, so one that hasn't been used for a while can take up to 30 seconds to wake. Portfolio work: not clinical or medical advice, and not official statistics.</p>
+  </div>
+</footer>
+</div>
+</body>
+</html>
